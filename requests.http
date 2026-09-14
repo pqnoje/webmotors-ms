@@ -1,0 +1,40 @@
+@gatewayUrl = http://localhost:4566/restapis/ammn3iulgn/local/_user_request_
+@usuarioId = 1
+
+### Listar usuarios
+GET {{gatewayUrl}}/usuarios
+Accept: application/json
+
+### Criar usuario
+POST {{gatewayUrl}}/usuarios
+Content-Type: application/json
+
+{
+  "nome": "Joao da Silva",
+  "email": "joao.silva@example.com"
+}
+
+### Desativar usuario
+PATCH {{gatewayUrl}}/usuarios/{{usuarioId}}/desativar
+Accept: application/json
+
+### Listar anuncios
+GET {{gatewayUrl}}/anuncios
+Accept: application/json
+
+### Criar anuncio
+POST {{gatewayUrl}}/anuncios
+Content-Type: application/json
+
+{
+  "usuarioId": {{usuarioId}},
+  "marca": "Toyota",
+  "modelo": "Corolla XEi",
+  "ano": 2022,
+  "preco": 125000.00,
+  "descricao": "Veiculo em excelente estado, unico dono."
+}
+
+### Listar anuncios de um usuario
+GET {{gatewayUrl}}/anuncios/usuario/{{usuarioId}}
+Accept: application/json

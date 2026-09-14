@@ -1,0 +1,21 @@
+# Local development
+.env
+.env.*
+!.env.example
+
+# IDE and editor files
+.vscode/*
+!.vscode/launch.json
+.idea/
+*.iml
+
+# Build and runtime artifacts
+**/target/
+**/build/
+*.log
+
+# LocalStack data
+localstack/data/
+
+# OS files
+.DS_Store

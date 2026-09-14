@@ -1,0 +1,47 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Debug usuarios-service",
+            "request": "launch",
+            "mainClass": "com.webmotors.usuarios.UsuariosServiceApplication",
+            "projectName": "usuarios-service",
+            "cwd": "${workspaceFolder}/webmotors-ms/usuarios-service",
+            "env": {
+                "DB_HOST": "localhost",
+                "DB_PORT": "5433",
+                "DB_NAME": "usuarios",
+                "DB_USER": "webmotors",
+                "DB_PASSWORD": "webmotors_dev_password",
+                "KAFKA_BOOTSTRAP_SERVERS": "localhost:9092"
+            }
+        },
+        {
+            "type": "java",
+            "name": "Debug anuncios-service",
+            "request": "launch",
+            "mainClass": "com.webmotors.anuncios.AnunciosServiceApplication",
+            "projectName": "anuncios-service",
+            "cwd": "${workspaceFolder}/webmotors-ms/anuncios-service",
+            "env": {
+                "DB_HOST": "localhost",
+                "DB_PORT": "5434",
+                "DB_NAME": "anuncios",
+                "DB_USER": "webmotors",
+                "DB_PASSWORD": "webmotors_dev_password",
+                "KAFKA_BOOTSTRAP_SERVERS": "localhost:9092"
+            }
+        }
+    ],
+    "compounds": [
+        {
+            "name": "Debug usuarios + anuncios",
+            "configurations": [
+                "Debug usuarios-service",
+                "Debug anuncios-service"
+            ],
+            "stopAll": true
+        }
+    ]
+}

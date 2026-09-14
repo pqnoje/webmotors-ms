@@ -1,0 +1,10 @@
+ALTER TABLE usuarios
+    ADD COLUMN IF NOT EXISTS ativo BOOLEAN;
+
+UPDATE usuarios
+SET ativo = TRUE
+WHERE ativo IS NULL;
+
+ALTER TABLE usuarios
+    ALTER COLUMN ativo SET DEFAULT TRUE,
+    ALTER COLUMN ativo SET NOT NULL;

@@ -1,0 +1,10 @@
+ALTER TABLE anuncios
+    ADD COLUMN IF NOT EXISTS ativo BOOLEAN;
+
+UPDATE anuncios
+SET ativo = TRUE
+WHERE ativo IS NULL;
+
+ALTER TABLE anuncios
+    ALTER COLUMN ativo SET DEFAULT TRUE,
+    ALTER COLUMN ativo SET NOT NULL;

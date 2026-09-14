@@ -1,0 +1,126 @@
+services:
+  postgres-usuarios:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: usuarios
+      POSTGRES_USER: webmotors
+      POSTGRES_PASSWORD: webmotors_dev_password
+    ports:
+      - "5433:5432"
+    volumes:
+      - webmotors-postgres-usuarios-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U webmotors -d usuarios"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  postgres-anuncios:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: anuncios
+      POSTGRES_USER: webmotors
+      POSTGRES_PASSWORD: webmotors_dev_password
+    ports:
+      - "5434:5432"
+    volumes:
+      - webmotors-postgres-anuncios-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U webmotors -d anuncios"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  kafka:
+    image: apache/kafka:4.0.0
+    environment:
+      CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+    ports:
+      - "9092:9092"
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:v0.7.2
+    environment:
+      DYNAMIC_CONFIG_ENABLED: "true"
+      KAFKA_CLUSTERS_0_NAME: webmotors-local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+    ports:
+      - "8088:8080"
+    depends_on:
+      kafka:
+        condition: service_healthy
+
+  localstack:
+    image: localstack/localstack:4.8
+    environment:
+      SERVICES: apigateway
+      DEBUG: "0"
+      AWS_DEFAULT_REGION: us-east-1
+      PERSISTENCE: "1"
+    ports:
+      - "4566:4566"
+    volumes:
+      - ./localstack/init/ready.d:/etc/localstack/init/ready.d
+      - webmotors-localstack-data:/var/lib/localstack
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:4566/_localstack/health >/dev/null"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  usuarios-service:
+    build:
+      context: ./usuarios-service
+    environment:
+      DB_HOST: postgres-usuarios
+      DB_PORT: 5432
+      DB_NAME: usuarios
+      DB_USER: webmotors
+      DB_PASSWORD: webmotors_dev_password
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      ANUNCIOS_SERVICE_URL: http://anuncios-service:8082
+    ports:
+      - "8081:8081"
+    depends_on:
+      postgres-usuarios:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+  anuncios-service:
+    build:
+      context: ./anuncios-service
+    environment:
+      DB_HOST: postgres-anuncios
+      DB_PORT: 5432
+      DB_NAME: anuncios
+      DB_USER: webmotors
+      DB_PASSWORD: webmotors_dev_password
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    ports:
+      - "8082:8082"
+    depends_on:
+      postgres-anuncios:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+volumes:
+  webmotors-postgres-usuarios-data:
+  webmotors-postgres-anuncios-data:
+  webmotors-localstack-data:

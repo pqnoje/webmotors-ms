@@ -31,6 +31,22 @@ services:
       timeout: 5s
       retries: 10
 
+  postgres-pagamentos:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: pagamentos
+      POSTGRES_USER: webmotors
+      POSTGRES_PASSWORD: webmotors_dev_password
+    ports:
+      - "5435:5432"
+    volumes:
+      - webmotors-postgres-pagamentos-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U webmotors -d pagamentos"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   kafka:
     image: apache/kafka:4.0.0
     environment:
@@ -120,7 +136,26 @@ services:
       kafka:
         condition: service_healthy
 
+  pagamentos-service:
+    build:
+      context: ./pagamentos-service
+    environment:
+      DB_HOST: postgres-pagamentos
+      DB_PORT: 5432
+      DB_NAME: pagamentos
+      DB_USER: webmotors
+      DB_PASSWORD: webmotors_dev_password
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    ports:
+      - "8083:8083"
+    depends_on:
+      postgres-pagamentos:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
 volumes:
   webmotors-postgres-usuarios-data:
   webmotors-postgres-anuncios-data:
+  webmotors-postgres-pagamentos-data:
   webmotors-localstack-data:

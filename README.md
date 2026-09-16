@@ -13,7 +13,7 @@ O projeto está em desenvolvimento incremental. A primeira fatia funcional já p
 - LocalStack com API Gateway simulado para testes de entrada única.
 - Kafka UI para inspeção dos tópicos durante o desenvolvimento.
 
-Os módulos `gateway/`, `pagamentos-service/` e `notificacoes-service/` ainda representam a evolução planejada e não devem ser considerados componentes produtivos neste momento. Para o desenvolvimento local, o API Gateway é simulado pelo LocalStack.
+- O `pagamentos-service` já possui a primeira fatia funcional para simulação de transações PIX, boleto e TED. O `notificacoes-service` ainda representa a evolução planejada. Para o desenvolvimento local, o API Gateway é simulado pelo LocalStack.
 
 ## Arquitetura atual
 
@@ -24,6 +24,8 @@ flowchart LR
     Gateway --> Anuncios[anuncios-service\n:8082]
     Usuarios --> DBU[(PostgreSQL\nusuarios)]
     Anuncios --> DBA[(PostgreSQL\nanuncios)]
+    Cliente --> Pagamentos[pagamentos-service\n:8083]
+    Pagamentos --> DBP[(PostgreSQL\npagamentos)]
     Usuarios <--> Kafka[(Kafka)]
     Anuncios <--> Kafka
     Kafka --> KafkaUI[Kafka UI\n:8088]
@@ -63,6 +65,13 @@ Cada serviço mantém sua própria base de dados e possui ciclo de build indepen
 - Consumir eventos de desativação de usuários.
 - Evitar reprocessamento de eventos já tratados.
 - Expor métricas de lotes, usuários e anúncios processados.
+
+### Pagamentos
+
+- Criar e listar transações PIX, boleto e TED.
+- Persistir transações em banco próprio com status inicial `PENDING`.
+- Garantir idempotência por `idempotencyKey` para reenvios da mesma requisição.
+- Expor health check e métricas via Actuator.
 
 ## Como executar
 
@@ -135,7 +144,8 @@ docker compose down -v
 
 - Implementar o `gateway/` como serviço Spring Cloud Gateway.
 - Definir a estratégia de descoberta e roteamento para um ambiente de deploy, mantendo o LocalStack como simulação local do API Gateway.
-- Completar `pagamentos-service` e `notificacoes-service` com casos de uso, persistência e contratos de integração.
+- Evoluir o `pagamentos-service` com processamento assíncrono, simulação de falhas, retentativas, DLQ e geração de carga para estudar resiliência em alto volume.
+- Completar `notificacoes-service` com casos de uso, persistência e contratos de integração.
 - Padronizar versões do Spring Boot e Spring Cloud entre os módulos.
 - Expandir testes unitários, de integração e de contrato, incluindo cenários de falha e reprocessamento Kafka.
 - Configurar autenticação e autorização com usuários, roles e gestão segura de credenciais.

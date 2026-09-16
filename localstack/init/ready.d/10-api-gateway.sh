@@ -74,6 +74,7 @@ create_route_group() {
 
 create_route_group 'usuarios' 'http://usuarios-service:8081/usuarios'
 create_route_group 'anuncios' 'http://anuncios-service:8082/anuncios'
+create_route_group 'pagamentos' 'http://pagamentos-service:8083/pagamentos'
 
 awslocal apigateway create-deployment \
   --rest-api-id "$api_id" \

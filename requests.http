@@ -1,11 +1,15 @@
-@gatewayUrl = http://localhost:4566/restapis/ammn3iulgn/local/_user_request_
+@gatewayUrl = http://localhost:4566/restapis/ac77m6oiiq/local/_user_request_
 @usuarioId = 1
 
-### Listar usuarios
+##############################################
+# 👤 USUARIOS
+##############################################
+
+### LISTAR USUARIOS
 GET {{gatewayUrl}}/usuarios
 Accept: application/json
 
-### Criar usuario
+### CRIAR USUARIO
 POST {{gatewayUrl}}/usuarios
 Content-Type: application/json
 
@@ -14,15 +18,20 @@ Content-Type: application/json
   "email": "joao.silva@example.com"
 }
 
-### Desativar usuario
+### DESATIVAR USUARIO
 PATCH {{gatewayUrl}}/usuarios/{{usuarioId}}/desativar
 Accept: application/json
 
-### Listar anuncios
+
+##############################################
+# 🚗 ANUNCIOS
+##############################################
+
+### LISTAR ANUNCIOS
 GET {{gatewayUrl}}/anuncios
 Accept: application/json
 
-### Criar anuncio
+### CRIAR ANUNCIO
 POST {{gatewayUrl}}/anuncios
 Content-Type: application/json
 
@@ -35,6 +44,48 @@ Content-Type: application/json
   "descricao": "Veiculo em excelente estado, unico dono."
 }
 
-### Listar anuncios de um usuario
+### LISTAR ANUNCIOS DE UM USUARIO
 GET {{gatewayUrl}}/anuncios/usuario/{{usuarioId}}
 Accept: application/json
+
+
+##############################################
+# 💳 PAGAMENTOS
+##############################################
+
+### LISTAR PAGAMENTOS
+GET {{gatewayUrl}}/pagamentos
+Accept: application/json
+
+### CRIAR PAGAMENTO - PIX
+POST {{gatewayUrl}}/pagamentos
+Content-Type: application/json
+
+{
+  "usuarioId": {{usuarioId}},
+  "amount": 150.00,
+  "method": "PIX",
+  "idempotencyKey": "pix-teste-001"
+}
+
+### CRIAR PAGAMENTO - BOLETO
+POST {{gatewayUrl}}/pagamentos
+Content-Type: application/json
+
+{
+  "usuarioId": {{usuarioId}},
+  "amount": 500.00,
+  "method": "BOLETO",
+  "idempotencyKey": "boleto-teste-001"
+}
+
+### CRIAR PAGAMENTO - TED
+POST {{gatewayUrl}}/pagamentos
+Content-Type: application/json
+
+{
+  "usuarioId": {{usuarioId}},
+  "amount": 2500.00,
+  "method": "TED",
+  "idempotencyKey": "ted-teste-001"
+}

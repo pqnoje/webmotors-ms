@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>webmotors-fastpay · Painel em tempo real</title>
+<style>
+  body { font-family: -apple-system, Segoe UI, Arial, sans-serif; background: #0f1115; color: #f1f1f1; margin: 0; padding: 32px; }
+  h1 { font-size: 20px; margin-bottom: 4px; }
+  p.subtitle { color: #9aa0a6; margin-top: 0; }
+  .cards { display: flex; gap: 16px; flex-wrap: wrap; margin: 24px 0; }
+  .card { background: #1b1e25; border-radius: 12px; padding: 20px 28px; min-width: 160px; box-shadow: 0 2px 8px rgba(0,0,0,.4); }
+  .card .valor { font-size: 34px; font-weight: 700; }
+  .card .label { color: #9aa0a6; font-size: 13px; text-transform: uppercase; letter-spacing: .05em; }
+  .recebidos .valor { color: #7aa2f7; }
+  .solicitados .valor { color: #b7a6ff; }
+  .concluidos .valor { color: #59d499; }
+  .falharam .valor { color: #ef6a6a; }
+  .pendentes .valor { color: #f2c14e; }
+  .controle { background: #1b1e25; border-radius: 12px; padding: 20px 28px; max-width: 420px; }
+  .controle label { display: block; margin-bottom: 8px; color: #9aa0a6; }
+  .controle input[type=range] { width: 100%; }
+  .controle .tps-valor { font-size: 22px; font-weight: 700; color: #f1f1f1; }
+  .status { margin-top: 8px; font-size: 12px; color: #9aa0a6; }
+</style>
+</head>
+<body>
+  <h1>webmotors-fastpay · pagamentos em tempo real</h1>
+  <p class="subtitle">PIX · BOLETO · TED — Retry + Circuit Breaker + Bulkhead protegendo o processamento</p>
+
+  <div class="cards">
+    <div class="card solicitados"><div class="valor" id="solicitados">0</div><div class="label">Solicitados pelo gerador</div></div>
+    <div class="card recebidos"><div class="valor" id="recebidos">0</div><div class="label">Recebidos</div></div>
+    <div class="card concluidos"><div class="valor" id="concluidos">0</div><div class="label">Concluidos</div></div>
+    <div class="card falharam"><div class="valor" id="falharam">0</div><div class="label">Falhas de processamento</div></div>
+    <div class="card pendentes"><div class="valor" id="pendentes">0</div><div class="label">Pendentes (aguardando reconciliacao)</div></div>
+  </div>
+
+  <div class="controle">
+    <label for="tps">Gerador automatico de transacoes: <span class="tps-valor" id="tpsValor">0</span> tps</label>
+    <input type="range" id="tps" min="0" max="10000" step="50" value="0">
+    <div class="status" id="status">Ajuste o slider para iniciar a carga automatica (0–10.000 TPS).</div>
+  </div>
+
+  <script>
+    const els = {
+      solicitados: document.getElementById('solicitados'),
+      recebidos: document.getElementById('recebidos'),
+      concluidos: document.getElementById('concluidos'),
+      falharam: document.getElementById('falharam'),
+      pendentes: document.getElementById('pendentes'),
+      tps: document.getElementById('tps'),
+      tpsValor: document.getElementById('tpsValor'),
+      status: document.getElementById('status')
+    };
+
+    const source = new EventSource('/pagamentos/dashboard/stream');
+    source.addEventListener('metrics', (event) => {
+      const data = JSON.parse(event.data);
+      els.solicitados.textContent = data.solicitados;
+      els.recebidos.textContent = data.recebidos;
+      els.concluidos.textContent = data.concluidos;
+      els.falharam.textContent = data.falharam;
+      els.pendentes.textContent = data.pendentes;
+      if (document.activeElement !== els.tps) {
+        els.tps.value = data.transacoesPorSegundo;
+        els.tpsValor.textContent = data.transacoesPorSegundo;
+      }
+    });
+    source.onerror = () => { els.status.textContent = 'Conexao perdida, tentando reconectar...'; };
+
+    let debounce;
+    els.tps.addEventListener('input', () => {
+      els.tpsValor.textContent = els.tps.value;
+      clearTimeout(debounce);
+      debounce = setTimeout(() => {
+        fetch(`/pagamentos/dashboard/gerador?tps=${els.tps.value}`, { method: 'POST' })
+          .then(() => { els.status.textContent = `Gerador ajustado para ${els.tps.value} tps.`; })
+          .catch(() => { els.status.textContent = 'Falha ao ajustar o gerador.'; });
+      }, 200);
+    });
+  </script>
+</body>
+</html>

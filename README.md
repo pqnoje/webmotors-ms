@@ -72,6 +72,9 @@ Cada serviço mantém sua própria base de dados e possui ciclo de build indepen
 - Persistir transações em banco próprio com status inicial `PENDING`.
 - Garantir idempotência por `idempotencyKey` para reenvios da mesma requisição.
 - Expor health check e métricas via Actuator.
+- Painel em tempo real (`/dashboard.html`) com contadores via SSE e gerador de carga ajustável:
+
+  ![Dashboard de pagamentos em tempo real](docs/dashboard-demo.gif)
 
 ## Como executar
 
